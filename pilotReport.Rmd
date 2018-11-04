@@ -175,8 +175,6 @@ etaSquared(aov_moralSR, type=2, anova=FALSE)
 
 # Step 5: Conclusion
 
-[Please include a text summary describing your findings. If this reproducibility check was a failure, you should note any suggestions as to what you think the likely cause(s) might be.]
-
 The reproducibility check was largely successful. ANOVAs with impurity and moral self-regard as dependent measures revealed only a significant main effect of type of behavior, as in the original paper. Participants in the inauthentic-behavior condition reported greater feelings of impurity (M = `r round(data_means_behavior_subject$avg[3], 2)`, SD = `r round(data_means_behavior_subject$sd[3], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[3], 2)`, `r round(data_means_behavior_subject$CI_95_upper[3], 2)`]) and lower moral self-regard (M = `r round(data_means_behavior_subject$avg[4], 2)`, SD = `r round(data_means_behavior_subject$sd[4], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[4], 2)`, `r round(data_means_behavior_subject$CI_95_upper[4], 2)`]) than did participants in the authentic-behavior condition (impurity: M = `r round(data_means_behavior_subject$avg[1], 2)`, SD = `r round(data_means_behavior_subject$sd[1], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[1], 2)`, `r round(data_means_behavior_subject$CI_95_upper[1], 2)`]; moral self-regard: M = `r round(data_means_behavior_subject$avg[2], 2)`, SD = `r round(data_means_behavior_subject$sd[2], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[2], 2)`, `r round(data_means_behavior_subject$CI_95_upper[2], 2)`]; F(1, 263) = 110.67, p < .001, partial eta squared = .30; and F(1, 263) = 114.40, p < .001, partial eta squared = .30, respectively).
 
 There are minor differences between the 4 confidence intervals, the 2 F-values, and the moral self-regard partial eta squared in the original paper and the ones reported here. The difference in the moral self-regard partial eta squared (original = .31, reproducibility attempt =.30) may have been a typo, but other differences did not have a clear causal locus (e.g. original F-values = 111.06 for impurity,  115.25 for moral self-regard; vs reproducibility attempt F-values = 110.67 for impurity, 114.40 for moral self-regard). 
@@ -245,8 +243,6 @@ if(reportType == "final"){
 ```
 
 # Session information
-
-[This function will output information about the package versions used in this report:]
 
 ```{r session_info, include=TRUE, echo=TRUE, results='markup'}
 devtools::session_info()
