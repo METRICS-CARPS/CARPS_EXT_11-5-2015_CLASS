@@ -222,7 +222,7 @@ div.tocify {
 
 <div id="report-details" class="section level1">
 <h1>Report Details</h1>
-<p>[PILOT/COPILOT ENTER RELEVANT REPORT DETAILS HERE]</p>
+<p>This reproducibility report attempts to reproduce the target results of Experiment 1 of Gino, Kouchaki, and Galinsky (2015), published in Psychological Science. The repository for this reproducibility project can be found <a href="https://github.com/mariannazhang/CARPS_EXT_11-5-2015_CLASS">on GitHub</a>.</p>
 <pre class="r"><code>articleID &lt;- &quot;11-5-2015_CLASS&quot; # insert the article ID code here e.g., &quot;10-3-2015_PS&quot;
 reportType &lt;- &quot;pilot&quot; # specify whether this is the 'pilot' report or 'final' report
 pilotNames &lt;- &quot;Marianna Zhang&quot;
@@ -235,10 +235,10 @@ completionDate &lt;- as.Date(&quot;11/04/18&quot;, format=&quot;%m/%d/%y&quot;) 
 <hr />
 <div id="methods-summary" class="section level4">
 <h4>Methods summary:</h4>
-<p>[PILOT/COPILOT write a brief summary of the methods underlying the target outcomes written in your own words]</p>
 <p>Participants were randomly assigned to a 2x2 between-subject design (behavior type x event type). For behavior type, those in the authentic condition were asked to write about a time they felt authentic, and those in the inauthentic condition were asked to write about a time they felt inauthentic. For event type, those in the general condition were not given any restrictions, and those in the unrelated condition were asked to write about a time that was not related to lying or deceiving others.</p>
 <p>Participants then completed measures of their moral self-regard and feelings of impurity, in random order. Participants then completed two manipulation checks: a measure of self-alienation, and self-reporting whether they had written about a time they felt authentic, inauthentic, or neutral.</p>
 <p>Participants who did not write an essay and participants who incorrectly answered what kind of essay they were going to write were excluded.</p>
+<p>2x2 ANOVAs were used to analyze the participants’ average responses to the impurity and moral self-regard measures across the two sets of conditions.</p>
 <hr />
 </div>
 <div id="target-outcomes" class="section level4">
@@ -377,8 +377,9 @@ summary(aov_moralSR)</code></pre>
 <div id="step-5-conclusion" class="section level1">
 <h1>Step 5: Conclusion</h1>
 <p>[Please include a text summary describing your findings. If this reproducibility check was a failure, you should note any suggestions as to what you think the likely cause(s) might be.]</p>
-<p>The reproducibility check was largely successful. ANOVAs with impurity and moral self-regard as dependent measures revealed only a significant main effect of type of behavior, as in the original paper. Participants in the inauthentic-behavior condition reported greater feelings of impurity (M = 3.56, SD = 1.86, 95% CI = [3.24, 3.88]) and lower moral self-regard (M = 2.9, SD = 1.5, 95% CI = [2.64, 3.15]) than did participants in the authentic-behavior condition (impurity: M = 1.51, SD = 1.29, 95% CI = [1.3, 1.73]; moral self-regard: M = 4.99, SD = 1.68, 95% CI = [4.71, 5.27]; F(1, 263) = 110.67, p &lt; .001, partial eta squared = .30; and F(1, 263) = 114.40, p &lt; .001, partial eta squared = .30, respectively)</p>
-<p>At first the pilot calculated descriptive statistics over all trials, instead of over subject summaries, which wasted some time. The final results are calculated over subject sumarries.</p>
+<p>The reproducibility check was largely successful. ANOVAs with impurity and moral self-regard as dependent measures revealed only a significant main effect of type of behavior, as in the original paper. Participants in the inauthentic-behavior condition reported greater feelings of impurity (M = 3.56, SD = 1.86, 95% CI = [3.24, 3.88]) and lower moral self-regard (M = 2.9, SD = 1.5, 95% CI = [2.64, 3.15]) than did participants in the authentic-behavior condition (impurity: M = 1.51, SD = 1.29, 95% CI = [1.3, 1.73]; moral self-regard: M = 4.99, SD = 1.68, 95% CI = [4.71, 5.27]; F(1, 263) = 110.67, p &lt; .001, partial eta squared = .30; and F(1, 263) = 114.40, p &lt; .001, partial eta squared = .30, respectively).</p>
+<p>There are minor differences between the 4 confidence intervals, the 2 F-values, and the moral self-regard partial eta squared in the original paper and the ones reported here. The difference in the moral self-regard partial eta squared (original = .31, reproducibility attempt =.30) may have been a typo, but other differences did not have a clear causal locus (e.g. original F-values = 111.06 for impurity, 115.25 for moral self-regard; vs reproducibility attempt F-values = 110.67 for impurity, 114.40 for moral self-regard).</p>
+<p>At first the pilot calculated descriptive statistics over all trials, instead of over subject summaries, which wasted some time. The final results are calculated over subject summaries.</p>
 <pre class="r"><code>Author_Assistance = FALSE
 
 Insufficient_Information_Errors &lt;- 1 # how many discrete insufficient information issues did you encounter?
@@ -390,7 +391,7 @@ locus_typo &lt;- 1 # how many discrete issues did you encounter that related to 
 locus_specification &lt;- 0 # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
 locus_analysis &lt;- 0 # how many discrete issues did you encounter that related to errors in the authors' original analyses?
 locus_data &lt;- 0 # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
-locus_unidentified &lt;- 0 # how many discrete issues were there for which you could not identify the cause
+locus_unidentified &lt;- 6 # how many discrete issues were there for which you could not identify the cause
 
 # How many of the above issues were resolved through author assistance?
 locus_typo_resolved &lt;- NA # how many discrete issues did you encounter that related to typographical errors?
@@ -400,7 +401,6 @@ locus_data_resolved &lt;- NA # how many discrete issues did you encounter that r
 locus_unidentified_resolved &lt;- NA # how many discrete issues were there for which you could not identify the cause
 
 Affects_Conclusion &lt;- FALSE # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? TRUE, FALSE, or NA. This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.</code></pre>
-<p>[PILOT/COPILOT DOD NOT EDIT THE CODE CHUNK BELOW]</p>
 <pre class="r"><code>reportObject &lt;- reportObject %&gt;%
   filter(dummyRow == FALSE) %&gt;% # remove the dummy row
   select(-dummyRow) %&gt;% # remove dummy row designation
