@@ -1,0 +1,344 @@
+---
+title: "CARPS Reproducibility Report"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+# Report Details
+
+This reproducibility report attempts to reproduce the target results of Experiment 1 of Gino, Kouchaki, and Galinsky (2015), published in Psychological Science. The repository for this reproducibility project can be found [on GitHub](https://github.com/mariannazhang/CARPS_EXT_11-5-2015_CLASS). 
+
+
+```{r}
+articleID <- "11-5-2015_CLASS" # insert the article ID code here e.g., "10-3-2015_PS"
+reportType <- "pilot" # specify whether this is the 'pilot' report or 'final' report
+pilotNames <- "Marianna Zhang"
+copilotNames <- "Mackenzie Leake"
+pilotTTC <- 300 # insert the pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
+copilotTTC <- NA # insert the co-pilot's estimated time to complete (in minutes, fine to approximate) e.g., 120
+pilotStartDate <- as.Date("11/03/18", format="%m/%d/%y") # insert the pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+copilotStartDate <- NA # insert the co-pilot's start date in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+completionDate <- as.Date("11/04/18", format="%m/%d/%y") # copilot insert the date of final report completion (after any necessary rounds of author assistance) in US format e.g., as.Date("01/25/18", format = "%m/%d/%y")
+```
+
+------
+
+#### Methods summary: 
+
+Participants were randomly assigned to a 2x2 between-subject design (behavior type x event type). For behavior type, those in the authentic condition were asked to write about a time they felt authentic, and those in the inauthentic condition were asked to write about a time they felt inauthentic. For event type, those in the general condition were not given any restrictions, and those in the unrelated condition were asked to write about a time that was not related to lying or deceiving others. 
+
+Participants then completed measures of their moral self-regard and feelings of impurity, in random order. Participants then completed two manipulation checks: a measure of self-alienation, and self-reporting whether they had written about a time they felt authentic, inauthentic, or neutral.
+
+Participants who did not write an essay and participants who incorrectly answered what kind of essay they were going to write were excluded.
+
+2x2 ANOVAs were used to analyze the participants' average responses to the impurity and moral self-regard measures across the two sets of conditions. 
+
+------
+
+#### Target outcomes: 
+
+>Impurity and moral self-regard. Similar 2x2 ANOVAs using impurity and moral self-regard as dependent measures also revealed only a significant main effect of type of behavior. Participants in the inauthentic-behavior condition reported greater feelings of impurity (M = 3.56, SD = 1.86, 95% CI = [3.30, 3.85]) and lower moral self-regard (M = 2.90, SD = 1.50, 95% CI = [2.61, 3.16]) than did participants in the authentic-behavior condition (impurity: M = 1.51, SD = 1.29, 95% CI = [1.25, 1.78]; moral self-regard: M = 4.99, SD = 1.68, 95% CI = [4.72, 5.26]), F(1, 263) = 111.06, p < .001, $\eta^{2}{p}$ = .30, and F(1, 263) = 115.25, p < .001, $\eta^{2}{p}$ = .31, respectively. (from Gino, Kouchaki, & Galinsky, 2015, p. 986).
+
+------
+ 
+
+```{r global_options, include=FALSE}
+# sets up some formatting options for the R Markdown document
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+```
+
+# Step 1: Load packages and prepare report object
+
+```{r}
+# load packages
+library(tidyverse) # for data munging
+library(knitr) # for kable table formating
+library(haven) # import and export 'SPSS', 'Stata' and 'SAS' Files
+library(readxl) # import excel files
+library(CARPSreports) # custom report functions
+library(lsr) # partial eta squared from ANOVA
+```
+
+```{r}
+# Prepare report object. This will be updated automatically by the reproCheck function each time values are compared
+reportObject <- data.frame(dummyRow = TRUE, reportedValue = NA, obtainedValue = NA, valueType = NA, percentageError = NA, comparisonOutcome = NA, eyeballCheck = NA)
+```
+
+# Step 2: Load data
+
+```{r}
+data <- read_sav("data/data_Experiment_1.sav")
+```
+
+# Step 3: Tidy data
+
+```{r}
+data_tidy <- data %>% 
+  mutate(subject = row_number()) %>% # add subject number
+  gather(question, response, moralSR_1:alienation_4) %>% # each question one row
+  separate(question, c("question_type", "question_number"), "_") %>% # organize questions by question type
+  separate(condition, c("behavior_type", "event_type"), "_") %>%  # separate out each IV
+  mutate(event_type=ifelse(is.na(event_type), "unrelated", event_type)) # add unrelated condition marker
+
+data_tidy$behavior_type <- as.factor(data_tidy$behavior_type)
+data_tidy$event_type <- as.factor(data_tidy$event_type)
+data_tidy$question_type <- as.factor(data_tidy$question_type)
+```
+
+# Step 4: Run analysis
+
+## Pre-processing
+
+```{r}
+data_tidy_filtered <- data_tidy %>% 
+  filter(failed_essay == 0 & # exclude those who did not write an essay
+           failed_MC == 0 & # exclude those who failed manipulation check
+           question_type != "alienation") # exclude alienation questions, since not in target analysis
+
+# group by subject
+data_tidy_filtered_subject <- data_tidy_filtered %>% 
+  group_by(subject, behavior_type, event_type, question_type) %>% 
+  summarize(subject_avg = mean(response, na.rm=TRUE))
+```
+
+## Descriptive statistics
+
+```{r}
+Q <- qnorm(.975) # 95% defined for confidence interval
+
+#### BY TRIAL (what pilot tried first) ####
+# summarize impurity, self-regard average across 2x2 conditions (by trial)
+data_means <- data_tidy_filtered %>%
+  group_by(behavior_type, event_type, question_type) %>% 
+  summarize(avg = mean(response, na.rm=TRUE), 
+            sd = sd(response, na.rm=TRUE),
+            CI_95_lower = avg-Q*(sd/sqrt(n())),
+            CI_95_upper = avg+Q*(sd/sqrt(n())))
+
+# summarize impurity, self-regard average across behavior type conditions (by trial)
+data_means_behavior <- data_tidy_filtered %>%
+  group_by(behavior_type, question_type) %>% 
+  summarize(avg = mean(response, na.rm=TRUE), 
+            sd = sd(response, na.rm=TRUE), 
+            CI_95_lower = avg-Q*(sd/sqrt(n())),
+            CI_95_upper = avg+Q*(sd/sqrt(n())))
+
+
+
+#### BY SUBJECT (what the original report did) ####
+
+# summarize impurity, self-regard average across behavior type conditions (by subject average)
+data_means_subject <- data_tidy_filtered_subject %>%
+  group_by(behavior_type, event_type, question_type) %>% 
+  summarize(avg = mean(subject_avg, na.rm=TRUE), 
+            sd = sd(subject_avg, na.rm=TRUE), 
+            CI_95_lower = avg-Q*(sd/sqrt(n())),
+            CI_95_upper = avg+Q*(sd/sqrt(n())))
+View(data_means_subject)
+
+# summarize impurity, self-regard average across behavior type conditions (by subject average)
+data_means_behavior_subject <- data_tidy_filtered_subject %>%
+  group_by(behavior_type, question_type) %>% 
+  summarize(avg = mean(subject_avg, na.rm=TRUE), 
+            sd = sd(subject_avg, na.rm=TRUE), 
+            CI_95_lower = avg-Q*(sd/sqrt(n())),
+            CI_95_upper = avg+Q*(sd/sqrt(n())))
+View(data_means_behavior_subject)
+
+
+
+
+#### COMPARE VALUES TO ORIGINAL (*= error) ####
+
+# inauthentic condition: impurity measure: average
+reproCheck(reportedValue = "3.56", obtainedValue = round(data_means_behavior_subject$avg[3], 2), valueType = "mean")
+
+# inauthentic condition: impurity measure: sd
+reproCheck(reportedValue = "1.86", obtainedValue = round(data_means_behavior_subject$sd[3], 2), valueType = "sd")
+
+# *inauthentic condition: impurity measure: CI lower bound
+reproCheck(reportedValue = "3.30", obtainedValue = round(data_means_behavior_subject$CI_95_lower[3], 2), valueType = "other")
+
+# *inauthentic condition: impurity measure: CI upper bound
+reproCheck(reportedValue = "3.85", obtainedValue = round(data_means_behavior_subject$CI_95_upper[3], 2), valueType = "other")
+
+
+
+# inauthentic condition: moral self-regard measure: average
+reproCheck(reportedValue = "2.90", obtainedValue = round(data_means_behavior_subject$avg[4], 2), valueType = "mean")
+
+# inauthentic condition: moral self-regard measure: sd
+reproCheck(reportedValue = "1.50", obtainedValue = round(data_means_behavior_subject$sd[4], 2), valueType = "sd")
+
+# *inauthentic condition: moral self-regard measure: CI lower bound
+reproCheck(reportedValue = "2.61", obtainedValue = round(data_means_behavior_subject$CI_95_lower[4], 2), valueType = "other")
+
+# *inauthentic condition: moral self-regard measure: CI upper bound
+reproCheck(reportedValue = "3.16", obtainedValue = round(data_means_behavior_subject$CI_95_upper[4], 2), valueType = "other")
+
+
+
+# authentic condition: impurity measure: average
+reproCheck(reportedValue = "1.51", obtainedValue = round(data_means_behavior_subject$avg[1], 2), valueType = "mean")
+
+# authentic condition: impurity measure: sd
+reproCheck(reportedValue = "1.29", obtainedValue = round(data_means_behavior_subject$sd[1], 2), valueType = "sd")
+
+# *authentic condition: impurity measure: CI lower bound
+reproCheck(reportedValue = "1.25", obtainedValue = round(data_means_behavior_subject$CI_95_lower[1], 2), valueType = "other")
+
+# *authentic condition: impurity measure: CI upper bound
+reproCheck(reportedValue = "1.78", obtainedValue = round(data_means_behavior_subject$CI_95_upper[1], 2), valueType = "other")
+
+
+
+# authentic condition: moral self-regard measure: average
+reproCheck(reportedValue = "4.99", obtainedValue = round(data_means_behavior_subject$avg[2], 2), valueType = "mean")
+
+# authentic condition: moral self-regard measure: sd
+reproCheck(reportedValue = "1.68", obtainedValue = round(data_means_behavior_subject$sd[2], 2), valueType = "sd")
+
+# *authentic condition: moral self-regard measure: CI lower bound
+reproCheck(reportedValue = "4.72", obtainedValue = round(data_means_behavior_subject$CI_95_lower[2], 2), valueType = "other")
+
+# *authentic condition: moral self-regard measure: CI upper bound
+reproCheck(reportedValue = "5.26", obtainedValue = round(data_means_behavior_subject$CI_95_upper[2], 2), valueType = "other")
+
+```
+
+
+
+## Inferential statistics
+
+```{r}
+# 2x2 ANOVA on impurity
+data_tidy_filtered_impurity <- data_tidy_filtered_subject %>%
+  filter(question_type == "Impurity")
+
+aov_impurity <- aov(subject_avg ~ behavior_type * event_type, data = data_tidy_filtered_impurity)
+summary(aov_impurity)
+etaSquared(aov_impurity, type=2, anova=FALSE)
+
+
+# 2x2 ANOVA on moral self-regard
+data_tidy_filtered_moralSR <- data_tidy_filtered_subject %>%
+  filter(question_type == "moralSR")
+aov_moralSR <- aov(subject_avg ~ behavior_type * event_type, data = data_tidy_filtered_moralSR)
+summary(aov_moralSR)
+etaSquared(aov_moralSR, type=2, anova=FALSE)
+
+
+
+
+#### COMPARE VALUES TO ORIGINAL (*=error) ####
+
+# impurity measure between inauthentic and authentic conditions: df within-groups
+reproCheck(reportedValue = "1", obtainedValue = "1", valueType = "df")
+
+# impurity measure between inauthentic and authentic conditions: df between-groups
+reproCheck(reportedValue = "263", obtainedValue = "263", valueType = "df")
+
+# *impurity measure between inauthentic and authentic conditions: F value
+reproCheck(reportedValue = "111.06", obtainedValue = "110.67", valueType = "F")
+
+# impurity measure between inauthentic and authentic conditions: p value
+reproCheck(reportedValue = "<.001", obtainedValue = "<2e-16", valueType = "p", eyeballCheck = TRUE)
+
+# impurity measure between inauthentic and authentic conditions: partial eta squared
+reproCheck(reportedValue = ".30", obtainedValue = "2.957931e-01", valueType = "other")
+
+
+
+# moral self-regard measure between inauthentic and authentic conditions: df within-groups
+reproCheck(reportedValue = "1", obtainedValue = "1", valueType = "df")
+
+# moral self-regard measure between inauthentic and authentic conditions: df between-groups
+reproCheck(reportedValue = "263", obtainedValue = "263", valueType = "df")
+
+# *moral self-regard measure between inauthentic and authentic conditions: F value
+reproCheck(reportedValue = "115.25", obtainedValue = "114.40", valueType = "F")
+
+# moral self-regard measure between inauthentic and authentic conditions: p value
+reproCheck(reportedValue = "<.001", obtainedValue = "<2e-16", valueType = "p", eyeballCheck = TRUE)
+
+# *moral self-regard measure between inauthentic and authentic conditions: partial eta squared (maybe a typo?)
+reproCheck(reportedValue = ".31", obtainedValue = "0.303980231", valueType = "other")
+```
+
+# Step 5: Conclusion
+
+The reproducibility check was largely successful. 
+
+ANOVAs with impurity and moral self-regard as dependent measures revealed only a significant main effect of type of behavior, as in the original paper. Participants in the inauthentic-behavior condition reported greater feelings of impurity (M = `r round(data_means_behavior_subject$avg[3], 2)`, SD = `r round(data_means_behavior_subject$sd[3], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[3], 2)`, `r round(data_means_behavior_subject$CI_95_upper[3], 2)`]) and lower moral self-regard (M = `r round(data_means_behavior_subject$avg[4], 2)`, SD = `r round(data_means_behavior_subject$sd[4], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[4], 2)`, `r round(data_means_behavior_subject$CI_95_upper[4], 2)`]) than did participants in the authentic-behavior condition (impurity: M = `r round(data_means_behavior_subject$avg[1], 2)`, SD = `r round(data_means_behavior_subject$sd[1], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[1], 2)`, `r round(data_means_behavior_subject$CI_95_upper[1], 2)`]; moral self-regard: M = `r round(data_means_behavior_subject$avg[2], 2)`, SD = `r round(data_means_behavior_subject$sd[2], 2)`, 95% CI = [`r round(data_means_behavior_subject$CI_95_lower[2], 2)`, `r round(data_means_behavior_subject$CI_95_upper[2], 2)`]; F(1, 263) = 110.67, p < .001, partial eta squared = .30; and F(1, 263) = 114.40, p < .001, partial eta squared = .30, respectively).
+
+There are minor differences between the 4 confidence intervals, the 2 F-values, and the moral self-regard partial eta squared in the original paper and the ones reported here. The difference in the moral self-regard partial eta squared (original = .31, reproducibility attempt =.30) may have been a typo, but other differences did not have a clear causal locus (e.g. original F-values = 111.06 for impurity,  115.25 for moral self-regard; vs reproducibility attempt F-values = 110.67 for impurity, 114.40 for moral self-regard). These minor differences are unlikely to affect the conclusion of the original paper.
+
+At first the pilot calculated descriptive statistics over all trials, instead of over subject summaries, which wasted some time. The final results are calculated over subject summaries. 
+
+
+```{r}
+Author_Assistance = FALSE
+
+Insufficient_Information_Errors <- 0 # how many discrete insufficient information issues did you encounter?
+
+# Assess the causal locus (discrete reproducibility issues) of any reproducibility errors. Note that there doesn't necessarily have to be a one-to-one correspondance between discrete reproducibility issues and reproducibility errors. For example, it could be that the original article neglects to mention that a Greenhouse-Geisser correct was applied to ANOVA outcomes. This might result in multiple reproducibility errors, but there is a single causal locus (discrete reproducibility issue).
+
+locus_typo <- 1 # how many discrete issues did you encounter that related to typographical errors?
+locus_specification <- 0 # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
+locus_analysis <- 0 # how many discrete issues did you encounter that related to errors in the authors' original analyses?
+locus_data <- 0 # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
+locus_unidentified <- 10 # how many discrete issues were there for which you could not identify the cause
+
+# How many of the above issues were resolved through author assistance?
+locus_typo_resolved <- NA # how many discrete issues did you encounter that related to typographical errors?
+locus_specification_resolved <- NA # how many discrete issues did you encounter that related to incomplete, incorrect, or unclear specification of the original analyses?
+locus_analysis_resolved <- NA # how many discrete issues did you encounter that related to errors in the authors' original analyses?
+locus_data_resolved <- NA # how many discrete issues did you encounter that related to errors in the data files shared by the authors?
+locus_unidentified_resolved <- NA # how many discrete issues were there for which you could not identify the cause
+
+Affects_Conclusion <- FALSE # Do any reproducibility issues encounter appear to affect the conclusions made in the original article? TRUE, FALSE, or NA. This is a subjective judgement, but you should taking into account multiple factors, such as the presence/absence of decision errors, the number of target outcomes that could not be reproduced, the type of outcomes that could or could not be reproduced, the difference in magnitude of effect sizes, and the predictions of the specific hypothesis under scrutiny.
+```
+
+
+```{r}
+reportObject <- reportObject %>%
+  filter(dummyRow == FALSE) %>% # remove the dummy row
+  select(-dummyRow) %>% # remove dummy row designation
+  mutate(articleID = articleID) %>% # add variables to report 
+  select(articleID, everything()) # make articleID first column
+
+# decide on final outcome
+if(any(reportObject$comparisonOutcome %in% c("MAJOR_ERROR", "DECISION_ERROR")) | Insufficient_Information_Errors > 0){
+  finalOutcome <- "Failure without author assistance"
+  if(Author_Assistance == T){
+    finalOutcome <- "Failure despite author assistance"
+  }
+}else{
+  finalOutcome <- "Success without author assistance"
+  if(Author_Assistance == T){
+    finalOutcome <- "Success with author assistance"
+  }
+}
+
+# collate report extra details
+reportExtras <- data.frame(articleID, pilotNames, copilotNames, pilotTTC, copilotTTC, pilotStartDate, copilotStartDate, completionDate, Author_Assistance, finalOutcome, Insufficient_Information_Errors, locus_typo, locus_specification, locus_analysis, locus_data, locus_unidentified, locus_typo_resolved, locus_specification_resolved, locus_analysis_resolved, locus_data_resolved, locus_unidentified_resolved)
+
+# save report objects
+if(reportType == "pilot"){
+  write_csv(reportObject, "pilotReportDetailed.csv")
+  write_csv(reportExtras, "pilotReportExtras.csv")
+}
+
+if(reportType == "final"){
+  write_csv(reportObject, "finalReportDetailed.csv")
+  write_csv(reportExtras, "finalReportExtras.csv")
+}
+```
+
+# Session information
+
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+devtools::session_info()
+```
